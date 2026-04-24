@@ -1,0 +1,21 @@
+.DS_Store
+
+# Next.js（web/）
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/.env*
+!web/.env.example
+web/*.tsbuildinfo
+web/next-env.d.ts
+web/.vercel
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/.pnpm-debug.log*
+web/coverage/
+
+# Supabase 本機（若產生）
+web/supabase/.branches
+web/supabase/.temp
