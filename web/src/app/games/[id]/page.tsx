@@ -58,6 +58,17 @@ function formatStartsAt(iso: string) {
   });
 }
 
+function gameStatusZh(status: string) {
+  const m: Record<string, string> = {
+    recruiting: "招募中",
+    full: "滿位（候補可排）",
+    in_progress: "開打中",
+    finished: "已結束",
+    cancelled: "已取消",
+  };
+  return m[status] ?? status;
+}
+
 async function getConfirmedCount(gameId: string) {
   const supabase = createAdminClient();
   const countRes = await supabase
@@ -147,8 +158,10 @@ async function requestJoinAction(formData: FormData) {
     redirect(`/games/${gameId}?error=${encodeURIComponent("你是主辦者，不需要加入")}`);
   }
   const status = gameRes.data.status as string;
-  if (["cancelled", "finished"].includes(status)) {
-    redirect(`/games/${gameId}?error=${encodeURIComponent("此局已結束或取消")}`);
+  if (["cancelled", "finished", "in_progress"].includes(status)) {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent("此局已開打、結束或取消，無法再加入")}`,
+    );
   }
 
   const existing = await supabase
@@ -240,8 +253,10 @@ async function hostConfirmAction(formData: FormData) {
   }
 
   const status = gameRes.data.status as string;
-  if (["cancelled", "finished"].includes(status)) {
-    redirect(`/games/${gameId}?error=${encodeURIComponent("此局已結束或取消")}`);
+  if (["cancelled", "finished", "in_progress"].includes(status)) {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent("此局已開打、結束或取消，無法再確認成員")}`,
+    );
   }
 
   const seatsTotal = gameRes.data.seats_total as number;
@@ -389,6 +404,82 @@ async function hostCancelGameAction(formData: FormData) {
   redirect(`/games/${gameId}`);
 }
 
+async function hostMarkInProgressAction(formData: FormData) {
+  "use server";
+  const session = await getSessionUser();
+  const gameId = String(formData.get("game_id") ?? "");
+  if (!session) redirect(`/login?next=/games/${encodeURIComponent(gameId)}`);
+  if (!gameId) redirect("/games");
+
+  const supabase = createAdminClient();
+  const gameRes = await supabase
+    .from("games")
+    .select("host_id,status")
+    .eq("id", gameId)
+    .single();
+  if (gameRes.error) {
+    redirect(`/games/${gameId}?error=${encodeURIComponent(gameRes.error.message)}`);
+  }
+  if (gameRes.data.host_id !== session.profileId) {
+    redirect(`/games/${gameId}?error=${encodeURIComponent("只有主辦者可以標記開打")}`);
+  }
+  const st = gameRes.data.status as string;
+  if (!["recruiting", "full"].includes(st)) {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent("只有在招募中或滿位時才能開始打牌")}`,
+    );
+  }
+
+  const upd = await supabase
+    .from("games")
+    .update({ status: "in_progress" })
+    .eq("id", gameId);
+  if (upd.error) {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent(`更新失敗：${upd.error.message}`)}`,
+    );
+  }
+  redirect(`/games/${gameId}`);
+}
+
+async function hostMarkFinishedAction(formData: FormData) {
+  "use server";
+  const session = await getSessionUser();
+  const gameId = String(formData.get("game_id") ?? "");
+  if (!session) redirect(`/login?next=/games/${encodeURIComponent(gameId)}`);
+  if (!gameId) redirect("/games");
+
+  const supabase = createAdminClient();
+  const gameRes = await supabase
+    .from("games")
+    .select("host_id,status")
+    .eq("id", gameId)
+    .single();
+  if (gameRes.error) {
+    redirect(`/games/${gameId}?error=${encodeURIComponent(gameRes.error.message)}`);
+  }
+  if (gameRes.data.host_id !== session.profileId) {
+    redirect(`/games/${gameId}?error=${encodeURIComponent("只有主辦者可以標記結束")}`);
+  }
+  const st = gameRes.data.status as string;
+  if (st !== "in_progress") {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent("只有在開打中才能標記結束牌局")}`,
+    );
+  }
+
+  const upd = await supabase
+    .from("games")
+    .update({ status: "finished" })
+    .eq("id", gameId);
+  if (upd.error) {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent(`更新失敗：${upd.error.message}`)}`,
+    );
+  }
+  redirect(`/games/${gameId}`);
+}
+
 export default async function GameDetailPage({
   params,
   searchParams,
@@ -446,6 +537,8 @@ export default async function GameDetailPage({
     : null;
   const secrets = (secretsRes?.data ?? null) as GameSecrets | null;
 
+  const canRequestJoin = ["recruiting", "full"].includes(game.status);
+
   return (
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
@@ -470,7 +563,7 @@ export default async function GameDetailPage({
             <p>
               座位：{confirmed.length}/{game.seats_total}
             </p>
-            <p>狀態：{game.status}</p>
+            <p>狀態：{gameStatusZh(game.status)}</p>
           </div>
         </div>
 
@@ -485,22 +578,54 @@ export default async function GameDetailPage({
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           {!session ? (
-            <Link
-              href={`/login?next=/games/${encodeURIComponent(game.id)}`}
-              className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
-            >
-              登入後加入
-            </Link>
-          ) : isHost ? (
-            <form action={hostCancelGameAction}>
-              <input type="hidden" name="game_id" value={game.id} />
-              <button
-                type="submit"
-                className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+            canRequestJoin ? (
+              <Link
+                href={`/login?next=/games/${encodeURIComponent(game.id)}`}
+                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
               >
-                取消牌局
-              </button>
-            </form>
+                登入後加入
+              </Link>
+            ) : (
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                此局目前不開放加入申請
+              </span>
+            )
+          ) : isHost ? (
+            <>
+              {["recruiting", "full"].includes(game.status) ? (
+                <form action={hostMarkInProgressAction}>
+                  <input type="hidden" name="game_id" value={game.id} />
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                  >
+                    開始打牌
+                  </button>
+                </form>
+              ) : null}
+              {game.status === "in_progress" ? (
+                <form action={hostMarkFinishedAction}>
+                  <input type="hidden" name="game_id" value={game.id} />
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                  >
+                    結束牌局
+                  </button>
+                </form>
+              ) : null}
+              {game.status !== "finished" && game.status !== "cancelled" ? (
+                <form action={hostCancelGameAction}>
+                  <input type="hidden" name="game_id" value={game.id} />
+                  <button
+                    type="submit"
+                    className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    取消牌局
+                  </button>
+                </form>
+              ) : null}
+            </>
           ) : myRow ? (
             <form action={leaveGameAction}>
               <input type="hidden" name="game_id" value={game.id} />
@@ -511,7 +636,7 @@ export default async function GameDetailPage({
                 {myRow.role === "waitlist" ? "退出候補" : "退出牌局"}
               </button>
             </form>
-          ) : (
+          ) : canRequestJoin ? (
             <form action={requestJoinAction}>
               <input type="hidden" name="game_id" value={game.id} />
               <button
@@ -521,6 +646,10 @@ export default async function GameDetailPage({
                 申請加入
               </button>
             </form>
+          ) : (
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+              此局目前不開放加入申請
+            </span>
           )}
 
           {isHost ? (
@@ -565,16 +694,18 @@ export default async function GameDetailPage({
           </div>
         ) : null}
 
-        <GameResultsSection
-          gameId={game.id}
-          gameStatus={game.status}
-          sessionUserId={me}
-          confirmedPlayers={confirmed.map((p) => ({
-            user_id: p.user_id,
-            display_name: p.profiles?.display_name ?? p.user_id,
-            role: p.role,
-          }))}
-        />
+        {game.status === "finished" ? (
+          <GameResultsSection
+            gameId={game.id}
+            gameStatus={game.status}
+            sessionUserId={me}
+            confirmedPlayers={confirmed.map((p) => ({
+              user_id: p.user_id,
+              display_name: p.profiles?.display_name ?? p.user_id,
+              role: p.role,
+            }))}
+          />
+        ) : null}
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">

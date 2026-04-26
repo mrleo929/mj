@@ -15,8 +15,7 @@ export default function Home() {
           全台約麻將，從這裡開始
         </h1>
         <p className="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-400">
-          專案已初始化：Supabase 客戶端、Session middleware、資料庫 migration
-          草稿。接下來可實作登入、牌局列表與開局表單。
+          已可使用 LINE 登入、瀏覽招募中的牌局、開局與加入流程；列表支援篩選與關鍵字（含備註）。
         </p>
         <div
           className={`mt-8 rounded-xl border px-4 py-3 text-sm ${
@@ -26,7 +25,13 @@ export default function Home() {
           }`}
         >
           {hasSupabase ? (
-            <span>已偵測到 Supabase 環境變數，可執行 `npm run dev` 開始開發。</span>
+            <span>
+              已偵測到 Supabase 公開環境變數；本機開發可執行{" "}
+              <code className="rounded bg-black/5 px-1 dark:bg-white/10">
+                npm run dev
+              </code>
+              。
+            </span>
           ) : (
             <span>
               請複製 <code className="rounded bg-black/5 px-1 dark:bg-white/10">.env.example</code>{" "}
@@ -35,7 +40,13 @@ export default function Home() {
             </span>
           )}
         </div>
-        <p className="mt-8">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <Link
+            href="/games"
+            className="inline-flex rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+          >
+            瀏覽牌局
+          </Link>
           <Link
             href="/login"
             className="inline-flex rounded-full px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-110"
@@ -43,14 +54,14 @@ export default function Home() {
           >
             LINE 登入
           </Link>
-        </p>
+        </div>
         <ul className="mt-8 list-inside list-disc space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
           <li>
-            資料庫：將{" "}
+            資料庫：依序執行{" "}
             <code className="rounded bg-black/5 px-1 dark:bg-white/10">
-              supabase/migrations/20260125000000_initial_schema.sql
+              web/supabase/migrations/
             </code>{" "}
-            貼到 Supabase SQL Editor 執行（建議新專案、執行一次）。
+            內 SQL（新專案由時間序從早到晚；已上線者只補尚未套用的檔案）。
           </li>
           <li>原始碼目錄：<code className="rounded bg-black/5 px-1 dark:bg-white/10">web/</code></li>
         </ul>

@@ -40,9 +40,17 @@ export async function submitGameResultProposal(formData: FormData) {
   if (gameRes.error) {
     redirect(`/games/${gameId}?error=${encodeURIComponent(gameRes.error.message)}`);
   }
-  if ((gameRes.data.status as string) === "cancelled") {
+  const gameStatus = gameRes.data.status as string;
+  if (gameStatus === "cancelled") {
     redirect(
       `/games/${gameId}?error=${encodeURIComponent("已取消的牌局無法登錄戰績")}`,
+    );
+  }
+  if (gameStatus !== "finished") {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent(
+        "請先由主辦標記「結束牌局」後再登錄戰績",
+      )}`,
     );
   }
 
@@ -133,6 +141,23 @@ export async function voteOnGameResult(formData: FormData) {
   await assertConfirmedPlayer(gameId, session.profileId);
 
   const supabase = createAdminClient();
+
+  const gameSt = await supabase
+    .from("games")
+    .select("status")
+    .eq("id", gameId)
+    .single();
+  if (gameSt.error) {
+    redirect(`/games/${gameId}?error=${encodeURIComponent(gameSt.error.message)}`);
+  }
+  if ((gameSt.data.status as string) !== "finished") {
+    redirect(
+      `/games/${gameId}?error=${encodeURIComponent(
+        "僅在牌局已結束後可投票確認戰績",
+      )}`,
+    );
+  }
+
   const prop = await supabase
     .from("game_result_proposals")
     .select("id,status,game_id")

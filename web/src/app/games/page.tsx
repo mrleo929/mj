@@ -118,7 +118,10 @@ export default async function GamesPage({
   const unit = parseOptionalInt(sp.unit);
   const tableType = cleanString(sp.table_type);
   const smokingPolicy = cleanString(sp.smoking_policy);
-  const status = cleanString(sp.status) || "open";
+  const rawListFilter = cleanString(sp.status) || "open";
+  const listFilter = ["open", "live", "past", "all"].includes(rawListFilter)
+    ? rawListFilter
+    : "open";
 
   const optionsRes = await supabase
     .from("games")
@@ -160,9 +163,28 @@ export default async function GamesPage({
     if (typeof unit === "number") x = x.eq("unit", unit);
     if (tableType) x = x.eq("table_type", tableType);
     if (smokingPolicy) x = x.eq("smoking_policy", smokingPolicy);
-    x = x.gte("starts_at", now.toISOString()).lt("starts_at", until.toISOString());
-    if (status !== "all") {
+
+    if (listFilter === "open") {
+      x = x
+        .gte("starts_at", now.toISOString())
+        .lt("starts_at", until.toISOString());
       x = x.in("status", ["recruiting", "full"]);
+    } else if (listFilter === "live") {
+      x = x.eq("status", "in_progress");
+      const liveSince = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      x = x.gte("starts_at", liveSince.toISOString());
+    } else if (listFilter === "past") {
+      x = x.eq("status", "finished");
+      const pastSince = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      x = x
+        .gte("starts_at", pastSince.toISOString())
+        .lte("starts_at", now.toISOString());
+    } else if (listFilter === "all") {
+      const winStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      x = x
+        .gte("starts_at", winStart.toISOString())
+        .lt("starts_at", until.toISOString());
+      x = x.neq("status", "cancelled");
     }
     return x;
   }
@@ -183,7 +205,7 @@ export default async function GamesPage({
     .select(
       "id,title,county,district,venue_type,starts_at,seats_total,status,base,unit,table_type,smoking_policy",
     )
-    .order("starts_at", { ascending: true });
+    .order("starts_at", { ascending: listFilter !== "past" });
   query = applyListFilters(query, q) as typeof query;
   const { data, error } = await query.range(from, to);
 
@@ -347,11 +369,13 @@ export default async function GamesPage({
               <span className="text-sm text-zinc-600 dark:text-zinc-400">顯示範圍</span>
               <select
                 name="status"
-                defaultValue={status}
+                defaultValue={listFilter}
                 className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
               >
-                <option value="open">只看招募中（含滿位候補）</option>
-                <option value="all">全部狀態</option>
+                <option value="open">招募中（含滿位候補，未來 7 天）</option>
+                <option value="live">開打中（近 30 天內開局）</option>
+                <option value="past">已結束（近一年內）</option>
+                <option value="all">全部（近 90 天～未來 7 天，不含已取消）</option>
               </select>
             </label>
             <div className="sm:col-span-2 flex items-center gap-3">
@@ -430,7 +454,7 @@ export default async function GamesPage({
                   unit,
                   tableType,
                   smokingPolicy,
-                  status,
+                  status: listFilter,
                   page: safePage - 1,
                 })}
                 className="rounded-xl border border-zinc-300 px-4 py-2 font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
@@ -453,7 +477,7 @@ export default async function GamesPage({
                   unit,
                   tableType,
                   smokingPolicy,
-                  status,
+                  status: listFilter,
                   page: safePage + 1,
                 })}
                 className="rounded-xl border border-zinc-300 px-4 py-2 font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
