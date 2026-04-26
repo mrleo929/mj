@@ -7,8 +7,8 @@ import { LineLoginForm } from "./line-login-form";
 import { LoggedInPanel } from "./logged-in-panel";
 
 export const metadata: Metadata = {
-  title: "登入 — Mj",
-  description: "使用 LINE 登入以約局與累積牌品",
+  title: "登入",
+  description: "使用 LINE 登入麻上有局，約局與累積牌品",
 };
 
 type SearchParams = Promise<{ error?: string; next?: string }>;
@@ -29,16 +29,18 @@ export default async function LoginPage({
   const supabaseReady = isSupabaseConfigured();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
+    <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:py-16">
         <Link
           href="/"
-          className="mb-8 text-sm text-zinc-500 transition hover:text-zinc-800 dark:hover:text-zinc-200"
+          className="mb-6 inline-flex min-h-10 items-center text-base text-zinc-500 transition active:text-zinc-800 sm:mb-8 dark:active:text-zinc-200"
         >
           ← 返回首頁
         </Link>
 
-        <h1 className="text-2xl font-semibold tracking-tight">登入 Mj</h1>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          登入麻上有局
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
           台灣使用者建議使用 LINE 一鍵登入。請先在 Supabase 與 LINE Developers
           完成設定（見專案 README）。
