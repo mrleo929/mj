@@ -4,7 +4,7 @@ const SESSION_COOKIE_NAME = "mj_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 type SessionUser = {
-  provider: "line";
+  provider: "line" | "dev";
   profileId: string;
   providerUserId: string;
   displayName: string;

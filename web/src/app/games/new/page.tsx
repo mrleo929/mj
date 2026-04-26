@@ -45,6 +45,11 @@ async function createGameAction(formData: FormData) {
   const addressDetail = getString(formData, "address_detail");
   const next = safeNextPath(getString(formData, "next"));
 
+  const base = getInt(formData, "base");
+  const unit = getInt(formData, "unit");
+  const tableType = getString(formData, "table_type") || null;
+  const smokingPolicy = getString(formData, "smoking_policy") || null;
+
   const startsAt = parseDatetimeLocal(startsAtRaw);
 
   if (!title || !county || !venueType || !startsAt) {
@@ -73,6 +78,10 @@ async function createGameAction(formData: FormData) {
       seats_total: seatsTotal,
       notes: notes || null,
       status: "recruiting",
+      base,
+      unit,
+      table_type: tableType,
+      smoking_policy: smokingPolicy,
     })
     .select("id")
     .single();
@@ -236,6 +245,60 @@ export default async function NewGamePage({
             </label>
           </div>
 
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-sm font-medium">規則（可篩選的常用欄位）</p>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">底（Base）</span>
+                <input
+                  name="base"
+                  type="number"
+                  min={0}
+                  step={10}
+                  placeholder="例：100"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">台（Unit）</span>
+                <input
+                  name="unit"
+                  type="number"
+                  min={0}
+                  step={10}
+                  placeholder="例：20"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">桌型</span>
+                <select
+                  name="table_type"
+                  defaultValue=""
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                >
+                  <option value="">不限</option>
+                  <option value="manual">手搓</option>
+                  <option value="electric">電動</option>
+                </select>
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">抽菸</span>
+                <select
+                  name="smoking_policy"
+                  defaultValue=""
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                >
+                  <option value="">不限</option>
+                  <option value="no_smoking">禁菸</option>
+                  <option value="table_smoke">桌煙</option>
+                  <option value="cigar_smoke">雀煙</option>
+                  <option value="vape">電子煙</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
           <label className="space-y-2">
             <span className="text-sm font-medium">備註（選填）</span>
             <textarea
@@ -249,6 +312,16 @@ export default async function NewGamePage({
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <p className="text-sm font-medium">敏感資訊（僅主辦/已確認成員可見）</p>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  地址（選填，僅主辦/已確認成員可見）
+                </span>
+                <input
+                  name="address_detail"
+                  placeholder="例：新北市新莊區 XX 路 XX 號（確認後才會顯示）"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
               <label className="space-y-2">
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">
                   聯絡方式（選填）
@@ -256,16 +329,6 @@ export default async function NewGamePage({
                 <input
                   name="host_contact"
                   placeholder="例：LINE ID / 電話 / IG"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
-                />
-              </label>
-              <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  地址細節（選填）
-                </span>
-                <input
-                  name="address_detail"
-                  placeholder="例：XX 路 XX 號（確認後才會顯示）"
                   className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
                 />
               </label>
