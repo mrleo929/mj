@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
+import { getSessionUser } from "@/lib/auth/session";
 import { LineLoginForm } from "./line-login-form";
 import { LoggedInPanel } from "./logged-in-panel";
 
@@ -26,14 +25,8 @@ export default async function LoginPage({
   const errorMessage =
     typeof params.error === "string" ? params.error : null;
 
-  let user: User | null = null;
+  const user = await getSessionUser();
   const supabaseReady = isSupabaseConfigured();
-
-  if (supabaseReady) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-  }
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
@@ -69,12 +62,22 @@ export default async function LoginPage({
               <code className="rounded bg-black/5 px-1 dark:bg-white/10">
                 NEXT_PUBLIC_SUPABASE_ANON_KEY
               </code>
-              後重新啟動 <code className="rounded bg-black/5 px-1 dark:bg-white/10">npm run dev</code>
-              。
+              後重新部署。
             </p>
           ) : null}
           {user ? (
-            <LoggedInPanel user={user} />
+            <LoggedInPanel
+              user={{
+                id: user.providerUserId,
+                app_metadata: {},
+                user_metadata: {
+                  display_name: user.displayName,
+                  avatar_url: user.avatarUrl ?? undefined,
+                },
+                aud: "authenticated",
+                created_at: new Date().toISOString(),
+              }}
+            />
           ) : (
             <LineLoginForm
               nextPath={nextPath}

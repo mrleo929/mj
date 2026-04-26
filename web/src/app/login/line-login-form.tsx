@@ -1,8 +1,6 @@
 "use client";
 
-import type { Provider } from "@supabase/supabase-js";
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMemo, useState } from "react";
 
 type Props = {
   nextPath: string;
@@ -18,24 +16,16 @@ export function LineLoginForm({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const href = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("next", nextPath);
+    return `/auth/line/start?${params.toString()}`;
+  }, [nextPath]);
 
-  async function signInWithLine() {
+  function signInWithLine() {
     setLoading(true);
     setLocalError(null);
-
-    const supabase = createClient();
-    const origin = window.location.origin;
-    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "line" as unknown as Provider,
-      options: { redirectTo },
-    });
-
-    if (error) {
-      setLocalError(error.message);
-      setLoading(false);
-    }
+    window.location.assign(href);
   }
 
   const showError = errorMessage ?? localError;
