@@ -5,6 +5,7 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 type SessionUser = {
   provider: "line";
+  profileId: string;
   providerUserId: string;
   displayName: string;
   avatarUrl?: string | null;

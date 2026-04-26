@@ -68,7 +68,7 @@ export default async function LoginPage({
           {user ? (
             <LoggedInPanel
               user={{
-                id: user.providerUserId,
+                id: user.profileId,
                 app_metadata: {},
                 user_metadata: {
                   display_name: user.displayName,

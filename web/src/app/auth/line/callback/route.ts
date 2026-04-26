@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { setSessionUser } from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const STATE_COOKIE = "mj_line_state";
 const VERIFIER_COOKIE = "mj_line_verifier";
@@ -70,6 +71,74 @@ async function fetchProfile(accessToken: string) {
   return (await res.json()) as LineProfile;
 }
 
+async function ensureProfile(params: {
+  providerUserId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+}) {
+  const admin = createAdminClient();
+
+  // 先找既有 profiles（用 provider/provider_user_id 綁定）
+  const existing = await admin
+    .from("profiles")
+    .select("id")
+    .eq("provider", "line")
+    .eq("provider_user_id", params.providerUserId)
+    .maybeSingle();
+
+  if (existing.data?.id) {
+    // 同步顯示資訊（display_name / avatar_url）
+    await admin
+      .from("profiles")
+      .update({
+        display_name: params.displayName,
+        avatar_url: params.avatarUrl ?? null,
+      })
+      .eq("id", existing.data.id);
+
+    return existing.data.id;
+  }
+
+  // 建立 auth.users（用不可投遞的假 email 當唯一鍵），讓既有 profiles FK 與 trigger 能正常工作
+  const fakeEmail = `line_${params.providerUserId}@users.mj.invalid`;
+  const created = await admin.auth.admin.createUser({
+    email: fakeEmail,
+    email_confirm: true,
+    user_metadata: {
+      display_name: params.displayName,
+      avatar_url: params.avatarUrl ?? null,
+      provider: "line",
+      provider_user_id: params.providerUserId,
+    },
+  });
+
+  if (created.error || !created.data.user) {
+    throw new Error(
+      `建立 Supabase 使用者失敗：${created.error?.message ?? "unknown"}`,
+    );
+  }
+
+  const userId = created.data.user.id;
+
+  // 觸發器可能已插入 profiles（只有 display_name），這裡用 upsert 補齊 provider 資訊與頭像
+  const upsert = await admin.from("profiles").upsert(
+    {
+      id: userId,
+      display_name: params.displayName,
+      avatar_url: params.avatarUrl ?? null,
+      provider: "line",
+      provider_user_id: params.providerUserId,
+    },
+    { onConflict: "id" },
+  );
+
+  if (upsert.error) {
+    throw new Error(`寫入 profiles 失敗：${upsert.error.message}`);
+  }
+
+  return userId;
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -112,8 +181,15 @@ export async function GET(request: NextRequest) {
     const token = await exchangeCodeForToken({ code, codeVerifier });
     const profile = await fetchProfile(token.access_token);
 
+    const profileId = await ensureProfile({
+      providerUserId: profile.userId,
+      displayName: profile.displayName,
+      avatarUrl: profile.pictureUrl ?? null,
+    });
+
     await setSessionUser({
       provider: "line",
+      profileId,
       providerUserId: profile.userId,
       displayName: profile.displayName,
       avatarUrl: profile.pictureUrl ?? null,
