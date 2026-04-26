@@ -133,6 +133,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
   const payload = await verify(token);
-  return payload?.user ?? null;
+  const user = payload?.user ?? null;
+  // 向後相容：舊版 cookie 可能沒有 profileId；視為未登入，要求重新登入。
+  if (!user || typeof user.profileId !== "string" || !user.profileId) {
+    return null;
+  }
+  return user;
 }
 

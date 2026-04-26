@@ -28,7 +28,11 @@ async function createGameAction(formData: FormData) {
   "use server";
 
   const session = await getSessionUser();
-  if (!session) redirect("/login?next=/games/new");
+  if (!session) {
+    redirect(
+      `/login?next=/games/new&error=${encodeURIComponent("請先重新登入，完成帳號初始化")}`,
+    );
+  }
 
   const title = getString(formData, "title");
   const county = getString(formData, "county");
