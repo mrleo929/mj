@@ -205,7 +205,8 @@ alter table public.game_result_lines enable row level security;
 alter table public.game_result_votes enable row level security;
 
 -- 基本原則：僅同局成員（含 host/confirmed/pending/waitlist）可看戰績資料
-create policy if not exists game_result_proposals_select_participants
+drop policy if exists game_result_proposals_select_participants on public.game_result_proposals;
+create policy game_result_proposals_select_participants
   on public.game_result_proposals for select
   to authenticated
   using (
@@ -217,7 +218,8 @@ create policy if not exists game_result_proposals_select_participants
   );
 
 -- 只有同局成員可新增提案（通常建議限制「已確認」才能提案；先用最小限制，後續可加強）
-create policy if not exists game_result_proposals_insert_participants
+drop policy if exists game_result_proposals_insert_participants on public.game_result_proposals;
+create policy game_result_proposals_insert_participants
   on public.game_result_proposals for insert
   to authenticated
   with check (
@@ -230,7 +232,8 @@ create policy if not exists game_result_proposals_insert_participants
   );
 
 -- lines：同局成員可讀；只允許提案者寫入該提案的 lines
-create policy if not exists game_result_lines_select_participants
+drop policy if exists game_result_lines_select_participants on public.game_result_lines;
+create policy game_result_lines_select_participants
   on public.game_result_lines for select
   to authenticated
   using (
@@ -243,7 +246,8 @@ create policy if not exists game_result_lines_select_participants
     )
   );
 
-create policy if not exists game_result_lines_insert_submitter
+drop policy if exists game_result_lines_insert_submitter on public.game_result_lines;
+create policy game_result_lines_insert_submitter
   on public.game_result_lines for insert
   to authenticated
   with check (
@@ -255,7 +259,8 @@ create policy if not exists game_result_lines_insert_submitter
   );
 
 -- votes：同局成員可讀；同局成員僅能對自己的 voter_id 投票
-create policy if not exists game_result_votes_select_participants
+drop policy if exists game_result_votes_select_participants on public.game_result_votes;
+create policy game_result_votes_select_participants
   on public.game_result_votes for select
   to authenticated
   using (
@@ -268,7 +273,8 @@ create policy if not exists game_result_votes_select_participants
     )
   );
 
-create policy if not exists game_result_votes_insert_self
+drop policy if exists game_result_votes_insert_self on public.game_result_votes;
+create policy game_result_votes_insert_self
   on public.game_result_votes for insert
   to authenticated
   with check (
@@ -282,7 +288,8 @@ create policy if not exists game_result_votes_insert_self
     )
   );
 
-create policy if not exists game_result_votes_update_self
+drop policy if exists game_result_votes_update_self on public.game_result_votes;
+create policy game_result_votes_update_self
   on public.game_result_votes for update
   to authenticated
   using (voter_id = auth.uid());
