@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { GameResultsSection } from "@/app/games/[id]/game-results-section";
+import { mahjongVariantLabel } from "@/lib/games/mahjong-variant";
 
 type Game = {
   id: string;
@@ -15,6 +16,8 @@ type Game = {
   seats_total: number;
   status: string;
   notes: string | null;
+  mahjong_variant: string | null;
+  jiang_count: number | null;
 };
 
 type GameSecrets = {
@@ -496,7 +499,9 @@ export default async function GameDetailPage({
 
   const gameRes = await supabase
     .from("games")
-    .select("id,host_id,title,county,district,venue_type,starts_at,seats_total,status,notes")
+    .select(
+      "id,host_id,title,county,district,venue_type,starts_at,seats_total,status,notes,mahjong_variant,jiang_count",
+    )
     .eq("id", id)
     .single();
   if (gameRes.error) return notFound();
@@ -540,26 +545,32 @@ export default async function GameDetailPage({
   const canRequestJoin = ["recruiting", "full"].includes(game.status);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+    <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:max-w-3xl sm:px-5 sm:pt-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div className="min-w-0 flex-1">
             <Link
               href="/games"
-              className="text-sm text-zinc-500 transition hover:text-zinc-800 dark:hover:text-zinc-200"
+              className="inline-flex min-h-10 items-center text-base text-zinc-500 transition active:text-zinc-800 dark:active:text-zinc-200"
             >
               ← 回牌局列表
             </Link>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-3 break-words text-xl font-semibold tracking-tight sm:mt-4 sm:text-2xl">
               {game.title}
             </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               {game.county}
-              {game.district ? ` · ${game.district}` : ""} · {game.venue_type} ·{" "}
-              {formatStartsAt(game.starts_at)}
+              {game.district ? ` · ${game.district}` : ""} · {game.venue_type}
+              {game.mahjong_variant
+                ? ` · ${mahjongVariantLabel(game.mahjong_variant)}`
+                : ""}
+              {typeof game.jiang_count === "number"
+                ? ` · ${game.jiang_count}將`
+                : ""}{" "}
+              · {formatStartsAt(game.starts_at)}
             </p>
           </div>
-          <div className="text-right text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex shrink-0 flex-col gap-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400 sm:text-right">
             <p>
               座位：{confirmed.length}/{game.seats_total}
             </p>
@@ -576,12 +587,12 @@ export default async function GameDetailPage({
           </p>
         ) : null}
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           {!session ? (
             canRequestJoin ? (
               <Link
                 href={`/login?next=/games/${encodeURIComponent(game.id)}`}
-                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:min-h-0 sm:text-sm"
               >
                 登入後加入
               </Link>
@@ -593,33 +604,33 @@ export default async function GameDetailPage({
           ) : isHost ? (
             <>
               {["recruiting", "full"].includes(game.status) ? (
-                <form action={hostMarkInProgressAction}>
+                <form action={hostMarkInProgressAction} className="w-full sm:w-auto">
                   <input type="hidden" name="game_id" value={game.id} />
                   <button
                     type="submit"
-                    className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                    className="min-h-12 w-full rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:text-sm"
                   >
                     開始打牌
                   </button>
                 </form>
               ) : null}
               {game.status === "in_progress" ? (
-                <form action={hostMarkFinishedAction}>
+                <form action={hostMarkFinishedAction} className="w-full sm:w-auto">
                   <input type="hidden" name="game_id" value={game.id} />
                   <button
                     type="submit"
-                    className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                    className="min-h-12 w-full rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:text-sm"
                   >
                     結束牌局
                   </button>
                 </form>
               ) : null}
               {game.status !== "finished" && game.status !== "cancelled" ? (
-                <form action={hostCancelGameAction}>
+                <form action={hostCancelGameAction} className="w-full sm:w-auto">
                   <input type="hidden" name="game_id" value={game.id} />
                   <button
                     type="submit"
-                    className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                    className="min-h-12 w-full rounded-xl border border-zinc-300 px-5 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:text-sm dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
                   >
                     取消牌局
                   </button>
@@ -627,21 +638,21 @@ export default async function GameDetailPage({
               ) : null}
             </>
           ) : myRow ? (
-            <form action={leaveGameAction}>
+            <form action={leaveGameAction} className="w-full sm:w-auto">
               <input type="hidden" name="game_id" value={game.id} />
               <button
                 type="submit"
-                className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="min-h-12 w-full rounded-xl border border-zinc-300 px-5 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:text-sm dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
               >
                 {myRow.role === "waitlist" ? "退出候補" : "退出牌局"}
               </button>
             </form>
           ) : canRequestJoin ? (
-            <form action={requestJoinAction}>
+            <form action={requestJoinAction} className="w-full sm:w-auto">
               <input type="hidden" name="game_id" value={game.id} />
               <button
                 type="submit"
-                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                className="min-h-12 w-full rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:text-sm"
               >
                 申請加入
               </button>
@@ -668,7 +679,7 @@ export default async function GameDetailPage({
         </div>
 
         {canSeeSecrets && (secrets?.host_contact || secrets?.address_detail) ? (
-          <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+          <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 sm:p-6">
             <p className="font-medium">聯絡與地址（僅限已確認成員）</p>
             <div className="mt-3 space-y-2">
               {secrets.host_contact ? (
@@ -688,7 +699,7 @@ export default async function GameDetailPage({
         ) : null}
 
         {game.notes ? (
-          <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+          <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 sm:p-6">
             <p className="font-medium">備註</p>
             <p className="mt-2 whitespace-pre-wrap">{game.notes}</p>
           </div>
@@ -707,8 +718,8 @@ export default async function GameDetailPage({
           />
         ) : null}
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <p className="text-sm font-medium">已確認成員</p>
             <ul className="mt-4 space-y-3 text-sm">
               {confirmed.length === 0 ? (
@@ -717,10 +728,10 @@ export default async function GameDetailPage({
                 confirmed.map((p) => (
                   <li
                     key={p.user_id}
-                    className="flex items-center justify-between gap-3"
+                    className="flex flex-col gap-2 border-b border-zinc-100 pb-3 last:border-0 last:pb-0 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:border-0 sm:pb-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-9 w-9 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-800" />
                       <div className="min-w-0">
                         <p className="truncate font-medium">
                           {p.profiles?.display_name ?? p.user_id}
@@ -731,12 +742,12 @@ export default async function GameDetailPage({
                       </div>
                     </div>
                     {isHost && p.role !== "host" ? (
-                      <form action={hostRemoveAction}>
+                      <form action={hostRemoveAction} className="w-full sm:w-auto">
                         <input type="hidden" name="game_id" value={game.id} />
                         <input type="hidden" name="user_id" value={p.user_id} />
                         <button
                           type="submit"
-                          className="rounded-xl border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                          className="min-h-11 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:px-3 sm:py-1.5 sm:text-xs dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
                         >
                           移除
                         </button>
@@ -748,14 +759,17 @@ export default async function GameDetailPage({
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <p className="text-sm font-medium">待主辦確認</p>
             <ul className="mt-4 space-y-3 text-sm">
               {pending.length === 0 ? (
                 <li className="text-zinc-600 dark:text-zinc-400">目前沒有待確認</li>
               ) : (
                 pending.map((p) => (
-                  <li key={p.user_id} className="flex items-center justify-between gap-3">
+                  <li
+                    key={p.user_id}
+                    className="flex flex-col gap-3 border-b border-zinc-100 pb-3 last:border-0 last:pb-0 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:border-0 sm:pb-0"
+                  >
                     <div className="min-w-0">
                       <p className="truncate font-medium">
                         {p.profiles?.display_name ?? p.user_id}
@@ -763,23 +777,23 @@ export default async function GameDetailPage({
                       <p className="text-xs text-zinc-500">申請中</p>
                     </div>
                     {isHost ? (
-                      <div className="flex items-center gap-2">
-                        <form action={hostConfirmAction}>
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        <form action={hostConfirmAction} className="w-full sm:w-auto">
                           <input type="hidden" name="game_id" value={game.id} />
                           <input type="hidden" name="user_id" value={p.user_id} />
                           <button
                             type="submit"
-                            className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-emerald-500"
+                            className="min-h-11 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs"
                           >
                             確認
                           </button>
                         </form>
-                        <form action={hostDeclineAction}>
+                        <form action={hostDeclineAction} className="w-full sm:w-auto">
                           <input type="hidden" name="game_id" value={game.id} />
                           <input type="hidden" name="user_id" value={p.user_id} />
                           <button
                             type="submit"
-                            className="rounded-xl border border-zinc-300 px-4 py-2 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                            className="min-h-11 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
                           >
                             拒絕
                           </button>
@@ -792,14 +806,17 @@ export default async function GameDetailPage({
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <p className="text-sm font-medium">候補名單</p>
             <ul className="mt-4 space-y-3 text-sm">
               {waitlist.length === 0 ? (
                 <li className="text-zinc-600 dark:text-zinc-400">目前沒有候補</li>
               ) : (
                 waitlist.map((p) => (
-                  <li key={p.user_id} className="flex items-center justify-between gap-3">
+                  <li
+                    key={p.user_id}
+                    className="flex flex-col gap-2 border-b border-zinc-100 pb-3 last:border-0 last:pb-0 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:border-0 sm:pb-0"
+                  >
                     <div className="min-w-0">
                       <p className="truncate font-medium">
                         {p.profiles?.display_name ?? p.user_id}
@@ -807,12 +824,12 @@ export default async function GameDetailPage({
                       <p className="text-xs text-zinc-500">候補中</p>
                     </div>
                     {isHost ? (
-                      <form action={hostRemoveAction}>
+                      <form action={hostRemoveAction} className="w-full sm:w-auto">
                         <input type="hidden" name="game_id" value={game.id} />
                         <input type="hidden" name="user_id" value={p.user_id} />
                         <button
                           type="submit"
-                          className="rounded-xl border border-zinc-300 px-4 py-2 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                          className="min-h-11 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
                         >
                           移除
                         </button>

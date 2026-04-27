@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth/session";
 import { GamesLocationPrefill } from "@/app/games/games-location-prefill";
+import { mahjongVariantLabel } from "@/lib/games/mahjong-variant";
+import { JiangCountPicker } from "@/app/games/jiang-count-picker";
 
 type GameRow = {
   id: string;
@@ -16,6 +18,8 @@ type GameRow = {
   unit: number | null;
   table_type: string | null;
   smoking_policy: string | null;
+  mahjong_variant: string | null;
+  jiang_count: number | null;
 };
 
 type Search = {
@@ -27,6 +31,8 @@ type Search = {
   unit?: string;
   table_type?: string;
   smoking_policy?: string;
+  mahjong_variant?: string;
+  jiang_count?: string;
   error?: string;
 };
 
@@ -49,6 +55,8 @@ function gamesListHref(parts: {
   unit: number | null;
   tableType: string;
   smokingPolicy: string;
+  mahjongVariant: string;
+  jiangCount: number | null;
   page: number;
 }) {
   const p = new URLSearchParams();
@@ -59,6 +67,9 @@ function gamesListHref(parts: {
   if (typeof parts.unit === "number") p.set("unit", String(parts.unit));
   if (parts.tableType) p.set("table_type", parts.tableType);
   if (parts.smokingPolicy) p.set("smoking_policy", parts.smokingPolicy);
+  if (parts.mahjongVariant) p.set("mahjong_variant", parts.mahjongVariant);
+  if (typeof parts.jiangCount === "number")
+    p.set("jiang_count", String(parts.jiangCount));
   if (parts.page > 1) p.set("page", String(parts.page));
   const qs = p.toString();
   return qs ? `/games?${qs}` : "/games";
@@ -122,6 +133,8 @@ export default async function GamesPage({
   const unit = parseOptionalInt(sp.unit);
   const tableType = cleanString(sp.table_type);
   const smokingPolicy = cleanString(sp.smoking_policy);
+  const mahjongVariant = cleanString(sp.mahjong_variant);
+  const jiangCount = parseOptionalInt(sp.jiang_count);
 
   const optionsRes = await supabase
     .from("games")
@@ -163,6 +176,8 @@ export default async function GamesPage({
     if (typeof unit === "number") x = x.eq("unit", unit);
     if (tableType) x = x.eq("table_type", tableType);
     if (smokingPolicy) x = x.eq("smoking_policy", smokingPolicy);
+    if (mahjongVariant) x = x.eq("mahjong_variant", mahjongVariant);
+    if (typeof jiangCount === "number") x = x.eq("jiang_count", jiangCount);
 
     // 只顯示仍「在約人」的局；主辦按「開打」後為 in_progress，即不會出現在列表
     x = x
@@ -186,7 +201,7 @@ export default async function GamesPage({
   let query = supabase
     .from("games")
     .select(
-      "id,title,county,district,venue_type,starts_at,seats_total,status,base,unit,table_type,smoking_policy",
+      "id,title,county,district,venue_type,starts_at,seats_total,status,base,unit,table_type,smoking_policy,mahjong_variant,jiang_count",
     )
     .order("starts_at", { ascending: true });
   query = applyListFilters(query, q) as typeof query;
@@ -196,39 +211,39 @@ export default async function GamesPage({
   const listError = error ?? countError;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <GamesLocationPrefill hasCounty={Boolean(county)} />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:max-w-3xl sm:px-5 sm:pt-6">
+        <div className="flex flex-col gap-4">
           <div>
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
               牌局列表
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
               招募中的局
             </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               僅列出仍在約人的局（招募中或滿位候補）。主辦按下「開打」後，該局會從此列表消失；已參與者可從連結或紀錄進入詳情。
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/"
-              className="rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-300 px-4 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:py-2.5 sm:text-sm dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
             >
               回首頁
             </Link>
             {session ? (
               <Link
                 href="/games/new"
-                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:flex-initial sm:min-h-0 sm:py-2.5 sm:text-sm"
               >
                 建立新局
               </Link>
             ) : (
               <Link
                 href="/login?next=/games/new"
-                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:flex-initial sm:min-h-0 sm:py-2.5 sm:text-sm"
               >
                 登入後建局
               </Link>
@@ -236,7 +251,7 @@ export default async function GamesPage({
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:mt-8 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium">篩選</p>
@@ -259,7 +274,7 @@ export default async function GamesPage({
               <select
                 name="county"
                 defaultValue={county}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               >
                 <option value="">不限</option>
                 {counties.map((c) => (
@@ -274,7 +289,7 @@ export default async function GamesPage({
               <select
                 name="district"
                 defaultValue={district}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
                 disabled={!county}
               >
                 <option value="">
@@ -295,7 +310,7 @@ export default async function GamesPage({
                 name="q"
                 defaultValue={q}
                 placeholder="搜尋標題或備註（例：新莊 / 100/20 / 禁菸）"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
             </label>
             <label className="space-y-2">
@@ -307,7 +322,7 @@ export default async function GamesPage({
                 min={0}
                 defaultValue={typeof base === "number" ? String(base) : ""}
                 placeholder="例：100"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
             </label>
             <label className="space-y-2">
@@ -319,7 +334,7 @@ export default async function GamesPage({
                 min={0}
                 defaultValue={typeof unit === "number" ? String(unit) : ""}
                 placeholder="例：20"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
             </label>
             <label className="space-y-2">
@@ -327,7 +342,7 @@ export default async function GamesPage({
               <select
                 name="table_type"
                 defaultValue={tableType}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               >
                 <option value="">不限</option>
                 <option value="manual">手搓</option>
@@ -339,7 +354,7 @@ export default async function GamesPage({
               <select
                 name="smoking_policy"
                 defaultValue={smokingPolicy}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
               >
                 <option value="">不限</option>
                 <option value="no_smoking">禁菸</option>
@@ -348,10 +363,32 @@ export default async function GamesPage({
                 <option value="vape">電子煙</option>
               </select>
             </label>
+            <label className="space-y-2 sm:col-span-2">
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">類型</span>
+              <select
+                name="mahjong_variant"
+                defaultValue={mahjongVariant}
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              >
+                <option value="">不限</option>
+                <option value="zheng_hua_zheng_zi">正花正字</option>
+                <option value="jian_hua_jian_zi">見花見字</option>
+                <option value="american">美麻</option>
+                <option value="riichi">日麻</option>
+                <option value="hong_kong">港麻</option>
+              </select>
+            </label>
+            <div className="space-y-2 sm:col-span-2">
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">將</span>
+              <JiangCountPicker
+                name="jiang_count"
+                defaultValue={jiangCount}
+              />
+            </div>
             <div className="sm:col-span-2 flex items-center gap-3">
               <button
                 type="submit"
-                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
+                className="min-h-11 rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 sm:min-h-0 sm:text-sm"
               >
                 套用篩選
               </button>
@@ -371,19 +408,19 @@ export default async function GamesPage({
           </p>
         ) : null}
 
-        <div className="mt-8 divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-6 divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 sm:mt-8">
           {games.length === 0 ? (
-            <div className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
+            <div className="p-5 text-sm text-zinc-600 dark:text-zinc-300 sm:p-6">
               目前還沒有牌局。{session ? "你可以先建立第一局。" : "請先登入後建局。"}
             </div>
           ) : (
             games.map((g) => (
-              <div key={g.id} className="p-6">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+              <div key={g.id} className="p-4 active:bg-zinc-50 sm:p-6 dark:active:bg-zinc-800/50">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
                     <Link
                       href={`/games/${g.id}`}
-                      className="text-base font-semibold underline-offset-2 hover:underline"
+                      className="text-base font-semibold underline-offset-2 active:text-emerald-700 sm:hover:underline dark:active:text-emerald-400"
                     >
                       {g.title}
                     </Link>
@@ -400,9 +437,15 @@ export default async function GamesPage({
                       {typeof g.unit === "number" ? ` / 台 ${g.unit}` : " / 台 -"}
                       {g.table_type ? ` · ${g.table_type}` : ""}
                       {g.smoking_policy ? ` · ${smokingPolicyLabel(g.smoking_policy)}` : ""}
+                      {g.mahjong_variant
+                        ? ` · ${mahjongVariantLabel(g.mahjong_variant)}`
+                        : ""}
+                      {typeof g.jiang_count === "number"
+                        ? ` · ${g.jiang_count}將`
+                        : ""}
                     </p>
                   </div>
-                  <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <div className="shrink-0 rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
                     <p>座位：{g.seats_total}</p>
                     <p>狀態：{recruitListStatusLabel(g.status)}</p>
                   </div>
@@ -413,7 +456,7 @@ export default async function GamesPage({
         </div>
 
         {totalPages > 1 ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="mt-6 flex flex-col items-stretch gap-3 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between dark:text-zinc-400">
             {safePage > 1 ? (
               <Link
                 href={gamesListHref({
@@ -424,16 +467,18 @@ export default async function GamesPage({
                   unit,
                   tableType,
                   smokingPolicy,
+                  mahjongVariant,
+                  jiangCount,
                   page: safePage - 1,
                 })}
-                className="rounded-xl border border-zinc-300 px-4 py-2 font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-300 px-4 font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:py-2 dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
               >
                 上一頁
               </Link>
             ) : (
-              <span className="invisible w-[1px] sm:w-auto" aria-hidden />
+              <span className="hidden min-h-11 sm:block sm:min-h-0" aria-hidden />
             )}
-            <span className="tabular-nums">
+            <span className="order-first text-center tabular-nums sm:order-none">
               第 {safePage} / {totalPages} 頁（共 {totalCount} 筆）
             </span>
             {safePage < totalPages ? (
@@ -446,14 +491,16 @@ export default async function GamesPage({
                   unit,
                   tableType,
                   smokingPolicy,
+                  mahjongVariant,
+                  jiangCount,
                   page: safePage + 1,
                 })}
-                className="rounded-xl border border-zinc-300 px-4 py-2 font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-300 px-4 font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:py-2 dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
               >
                 下一頁
               </Link>
             ) : (
-              <span className="invisible w-[1px] sm:w-auto" aria-hidden />
+              <span className="hidden min-h-11 sm:block sm:min-h-0" aria-hidden />
             )}
           </div>
         ) : null}
