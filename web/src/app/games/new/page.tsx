@@ -4,8 +4,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { parseMahjongVariant } from "@/lib/games/mahjong-variant";
-import { parseJiangCountForm } from "@/lib/games/jiang-count";
-import { JiangCountPicker } from "@/app/games/jiang-count-picker";
+import { JIANG_COUNT_OPTIONS, parseJiangCountForm } from "@/lib/games/jiang-count";
 
 function getString(formData: FormData, key: string): string {
   const raw = formData.get(key);
@@ -318,10 +317,21 @@ export default async function NewGamePage({
                   <option value="hong_kong">港麻</option>
                 </select>
               </label>
-              <div className="space-y-2 sm:col-span-2">
+              <label className="space-y-2 sm:col-span-2">
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">將</span>
-                <JiangCountPicker name="jiang_count" />
-              </div>
+                <select
+                  name="jiang_count"
+                  defaultValue=""
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                >
+                  <option value="">不限</option>
+                  {JIANG_COUNT_OPTIONS.map((n) => (
+                    <option key={n} value={String(n)}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
 

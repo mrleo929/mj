@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth/session";
 import { GamesLocationPrefill } from "@/app/games/games-location-prefill";
 import { mahjongVariantLabel } from "@/lib/games/mahjong-variant";
-import { JiangCountPicker } from "@/app/games/jiang-count-picker";
+import { JIANG_COUNT_OPTIONS } from "@/lib/games/jiang-count";
 
 type GameRow = {
   id: string;
@@ -378,13 +378,21 @@ export default async function GamesPage({
                 <option value="hong_kong">港麻</option>
               </select>
             </label>
-            <div className="space-y-2 sm:col-span-2">
+            <label className="space-y-2 sm:col-span-2">
               <span className="text-sm text-zinc-600 dark:text-zinc-400">將</span>
-              <JiangCountPicker
+              <select
                 name="jiang_count"
-                defaultValue={jiangCount}
-              />
-            </div>
+                defaultValue={jiangCount === null ? "" : String(jiangCount)}
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              >
+                <option value="">不限</option>
+                {JIANG_COUNT_OPTIONS.map((n) => (
+                  <option key={n} value={String(n)}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="sm:col-span-2 flex items-center gap-3">
               <button
                 type="submit"
