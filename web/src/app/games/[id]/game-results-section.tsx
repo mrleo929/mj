@@ -119,9 +119,9 @@ export async function GameResultsSection({
   );
 
   return (
-    <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:mt-10 sm:p-6">
+    <div className="mt-10 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <p className="text-sm font-medium">戰績（MVP）</p>
-      <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
         已確認玩家可提案每位成員的「最終分數」，其他人可確認或提出異議；達 3
         票確認或逾時無異議則接受（規則見資料庫 trigger）。
       </p>
@@ -142,9 +142,8 @@ export async function GameResultsSection({
                 <input
                   name={`score_${p.user_id}`}
                   type="number"
-                  inputMode="numeric"
                   required
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:py-2 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
                   placeholder="整數，可為負"
                 />
               </label>
@@ -152,7 +151,7 @@ export async function GameResultsSection({
           </div>
           <button
             type="submit"
-            className="min-h-12 w-full rounded-xl bg-emerald-600 px-4 py-3 text-base font-medium text-white transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:py-2.5 sm:text-sm"
+            className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500"
           >
             送出提案
           </button>
@@ -183,7 +182,7 @@ export async function GameResultsSection({
             return (
               <div
                 key={pr.id}
-                className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800 sm:p-4"
+                className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="text-sm font-medium">
@@ -227,31 +226,31 @@ export async function GameResultsSection({
                 ) : null}
 
                 {pr.status === "pending" && canAct ? (
-                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                    <form action={voteOnGameResult} className="w-full sm:w-auto">
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <form action={voteOnGameResult}>
                       <input type="hidden" name="game_id" value={gameId} />
                       <input type="hidden" name="proposal_id" value={pr.id} />
                       <input type="hidden" name="vote" value="confirm" />
                       <button
                         type="submit"
-                        className="min-h-11 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition active:bg-emerald-700 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs"
+                        className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-emerald-500"
                       >
                         確認戰績
                       </button>
                     </form>
-                    <form action={voteOnGameResult} className="w-full sm:w-auto">
+                    <form action={voteOnGameResult}>
                       <input type="hidden" name="game_id" value={gameId} />
                       <input type="hidden" name="proposal_id" value={pr.id} />
                       <input type="hidden" name="vote" value="dispute" />
                       <button
                         type="submit"
-                        className="min-h-11 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
+                        className="rounded-xl border border-zinc-300 px-4 py-2 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
                       >
                         異議
                       </button>
                     </form>
                     {myVote ? (
-                      <span className="text-xs text-zinc-500 sm:self-center">
+                      <span className="self-center text-xs text-zinc-500">
                         你已投：{voteLabel(myVote)}（可再投覆寫）
                       </span>
                     ) : null}

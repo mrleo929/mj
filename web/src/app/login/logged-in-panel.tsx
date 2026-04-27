@@ -36,7 +36,7 @@ export function LoggedInPanel({ user }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href="/"
-          className="flex min-h-12 items-center justify-center rounded-xl border border-zinc-300 px-4 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-100 dark:active:bg-zinc-800"
+          className="rounded-xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
           回到首頁
         </Link>
@@ -44,7 +44,7 @@ export function LoggedInPanel({ user }: Props) {
           type="button"
           onClick={() => void signOut()}
           disabled={loading}
-          className="flex min-h-12 items-center justify-center rounded-xl border border-zinc-300 px-4 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:active:bg-zinc-800"
+          className="rounded-xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
           {loading ? "登出中…" : "登出"}
         </button>

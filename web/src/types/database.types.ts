@@ -110,9 +110,7 @@ export type Database = {
           ends_at: string | null
           host_id: string
           id: string
-          jiang_count: number | null
           min_reputation: number | null
-          mahjong_variant: Database["public"]["Enums"]["mahjong_variant"] | null
           notes: string | null
           rules_tags: string[]
           seats_total: number
@@ -129,9 +127,7 @@ export type Database = {
           ends_at?: string | null
           host_id: string
           id?: string
-          jiang_count?: number | null
           min_reputation?: number | null
-          mahjong_variant?: Database["public"]["Enums"]["mahjong_variant"] | null
           notes?: string | null
           rules_tags?: string[]
           seats_total?: number
@@ -148,9 +144,7 @@ export type Database = {
           ends_at?: string | null
           host_id?: string
           id?: string
-          jiang_count?: number | null
           min_reputation?: number | null
-          mahjong_variant?: Database["public"]["Enums"]["mahjong_variant"] | null
           notes?: string | null
           rules_tags?: string[]
           seats_total?: number
@@ -316,12 +310,6 @@ export type Database = {
         | "in_progress"
         | "finished"
         | "cancelled"
-      mahjong_variant:
-        | "zheng_hua_zheng_zi"
-        | "jian_hua_jian_zi"
-        | "american"
-        | "riichi"
-        | "hong_kong"
       participant_role: "host" | "player" | "waitlist"
       participant_status: "pending" | "confirmed" | "declined" | "removed"
       report_target_type: "game" | "profile" | "review"
@@ -461,13 +449,6 @@ export const Constants = {
         "in_progress",
         "finished",
         "cancelled",
-      ],
-      mahjong_variant: [
-        "zheng_hua_zheng_zi",
-        "jian_hua_jian_zi",
-        "american",
-        "riichi",
-        "hong_kong",
       ],
       participant_role: ["host", "player", "waitlist"],
       participant_status: ["pending", "confirmed", "declined", "removed"],

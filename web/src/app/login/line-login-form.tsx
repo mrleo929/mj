@@ -45,7 +45,7 @@ export function LineLoginForm({
         type="button"
         onClick={() => void signInWithLine()}
         disabled={loading || disabled}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium text-white shadow-sm transition active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         style={{ backgroundColor: "#06C755" }}
       >
         {loading ? (

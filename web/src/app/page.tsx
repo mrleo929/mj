@@ -6,14 +6,14 @@ export default function Home() {
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 sm:max-w-xl sm:px-6 sm:py-16">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          麻上有局
-        </h1>
-        <p className="mt-2 text-base font-medium text-emerald-700 dark:text-emerald-400">
-          全台約麻將，從這裡開始
+    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-6 py-16">
+        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          Mj 網頁版（Next.js + Supabase）
         </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+          全台約麻將，從這裡開始
+        </h1>
         <p className="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-400">
           已可使用 LINE 登入、瀏覽招募中的牌局、開局與加入流程；列表支援篩選與關鍵字（含備註）。
         </p>
@@ -40,16 +40,16 @@ export default function Home() {
             </span>
           )}
         </div>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
             href="/games"
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 py-3 text-base font-medium text-zinc-900 transition active:bg-zinc-100 sm:w-auto dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:active:bg-zinc-800"
+            className="inline-flex rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
           >
             瀏覽牌局
           </Link>
           <Link
             href="/login"
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full px-5 py-3 text-base font-medium text-white transition active:brightness-95 sm:w-auto"
+            className="inline-flex rounded-full px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-110"
             style={{ backgroundColor: "#06C755" }}
           >
             LINE 登入
