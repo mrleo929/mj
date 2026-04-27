@@ -114,6 +114,49 @@ function recruitListStatusLabel(status: string) {
   return status;
 }
 
+function recruitListStatusTone(status: string) {
+  if (status === "recruiting")
+    return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200";
+  if (status === "full")
+    return "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100";
+  return "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300";
+}
+
+function chip(text: string) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
+      {text}
+    </span>
+  );
+}
+
+function filtersSummary(parts: {
+  county: string;
+  district: string;
+  q: string;
+  base: number | null;
+  unit: number | null;
+  tableType: string;
+  smokingPolicy: string;
+  mahjongVariant: string;
+  jiangCount: number | null;
+}) {
+  const chips: string[] = [];
+  if (parts.county) chips.push(parts.county);
+  if (parts.district) chips.push(parts.district);
+  if (parts.smokingPolicy) chips.push(smokingPolicyLabel(parts.smokingPolicy));
+  if (parts.mahjongVariant) chips.push(mahjongVariantLabel(parts.mahjongVariant));
+  if (typeof parts.jiangCount === "number") chips.push(`${parts.jiangCount}將`);
+  if (parts.tableType) chips.push(parts.tableType === "manual" ? "手搓" : "電動");
+  if (typeof parts.base === "number" || typeof parts.unit === "number")
+    chips.push(
+      `${typeof parts.base === "number" ? parts.base : "-"} / ${typeof parts.unit === "number" ? parts.unit : "-"}`,
+    );
+  if (parts.q) chips.push(`關鍵字：${parts.q}`);
+  if (chips.length === 0) return "不限（點此展開篩選）";
+  return chips.join(" · ");
+}
+
 export default async function GamesPage({
   searchParams,
 }: {
@@ -213,7 +256,7 @@ export default async function GamesPage({
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <GamesLocationPrefill hasCounty={Boolean(county)} />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:max-w-3xl sm:px-5 sm:pt-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-[max(6.5rem,env(safe-area-inset-bottom))] pt-4 sm:max-w-3xl sm:px-5 sm:pt-6">
         <div className="flex flex-col gap-4">
           <div>
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -251,15 +294,35 @@ export default async function GamesPage({
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:mt-8 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium">篩選</p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                直接改篩選條件後送出，URL 會同步更新，方便分享。
-                未選縣市時若允許定位，會嘗試依你目前位置預填縣市與行政區。
-              </p>
+        <details className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:mt-8 sm:p-5">
+          <summary className="list-none cursor-pointer select-none [&::-webkit-details-marker]:hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">篩選</p>
+                <p className="mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  {filtersSummary({
+                    county,
+                    district,
+                    q,
+                    base,
+                    unit,
+                    tableType,
+                    smokingPolicy,
+                    mahjongVariant,
+                    jiangCount,
+                  })}
+                </p>
+              </div>
+              <div className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
+                展開
+              </div>
             </div>
+          </summary>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              改篩選後送出，URL 會同步更新，方便分享；未選縣市時若允許定位，會嘗試依你目前位置預填。
+            </p>
             <Link
               href="/games"
               className="text-sm text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-300"
@@ -292,9 +355,7 @@ export default async function GamesPage({
                 className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
                 disabled={!county}
               >
-                <option value="">
-                  {county ? "不限" : "請先選縣市"}
-                </option>
+                <option value="">{county ? "不限" : "請先選縣市"}</option>
                 {county
                   ? districtsForSelectedCounty.map((d) => (
                       <option key={d} value={d}>
@@ -405,7 +466,7 @@ export default async function GamesPage({
               </p>
             </div>
           </form>
-        </div>
+        </details>
 
         {listError ? (
           <p
@@ -423,12 +484,18 @@ export default async function GamesPage({
             </div>
           ) : (
             games.map((g) => (
-              <div key={g.id} className="p-4 active:bg-zinc-50 sm:p-6 dark:active:bg-zinc-800/50">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div
+                key={g.id}
+                className="p-4 active:bg-zinc-50 sm:p-6 dark:active:bg-zinc-800/50"
+              >
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {formatStartsAt(g.starts_at)}
+                    </p>
                     <Link
                       href={`/games/${g.id}`}
-                      className="text-base font-semibold underline-offset-2 active:text-emerald-700 sm:hover:underline dark:active:text-emerald-400"
+                      className="mt-1 line-clamp-2 text-base font-semibold underline-offset-2 active:text-emerald-700 sm:hover:underline dark:active:text-emerald-400"
                     >
                       {g.title}
                     </Link>
@@ -436,27 +503,29 @@ export default async function GamesPage({
                       {g.county}
                       {g.district ? ` · ${g.district}` : ""} · {g.venue_type}
                     </p>
-                    <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-                      開始時間：{formatStartsAt(g.starts_at)}
-                    </p>
-                    <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-                      規則：
-                      {typeof g.base === "number" ? ` 底 ${g.base}` : " 底 -"}
-                      {typeof g.unit === "number" ? ` / 台 ${g.unit}` : " / 台 -"}
-                      {g.table_type ? ` · ${g.table_type}` : ""}
-                      {g.smoking_policy ? ` · ${smokingPolicyLabel(g.smoking_policy)}` : ""}
-                      {g.mahjong_variant
-                        ? ` · ${mahjongVariantLabel(g.mahjong_variant)}`
-                        : ""}
-                      {typeof g.jiang_count === "number"
-                        ? ` · ${g.jiang_count}將`
-                        : ""}
-                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {typeof g.base === "number" || typeof g.unit === "number"
+                        ? chip(
+                            `底 ${typeof g.base === "number" ? g.base : "-"} / 台 ${typeof g.unit === "number" ? g.unit : "-"}`,
+                          )
+                        : null}
+                      {g.table_type
+                        ? chip(g.table_type === "manual" ? "手搓" : "電動")
+                        : null}
+                      {g.smoking_policy ? chip(smokingPolicyLabel(g.smoking_policy)) : null}
+                      {g.mahjong_variant ? chip(mahjongVariantLabel(g.mahjong_variant)) : null}
+                      {typeof g.jiang_count === "number" ? chip(`${g.jiang_count}將`) : null}
+                      {chip(`座位 ${g.seats_total}`)}
+                    </div>
                   </div>
-                  <div className="shrink-0 rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
-                    <p>座位：{g.seats_total}</p>
-                    <p>狀態：{recruitListStatusLabel(g.status)}</p>
-                  </div>
+                  <span
+                    className={[
+                      "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold",
+                      recruitListStatusTone(g.status),
+                    ].join(" ")}
+                  >
+                    {recruitListStatusLabel(g.status)}
+                  </span>
                 </div>
               </div>
             ))
@@ -513,6 +582,34 @@ export default async function GamesPage({
           </div>
         ) : null}
       </main>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-2xl px-4 sm:max-w-3xl sm:px-5">
+          <div className="pointer-events-auto flex items-center justify-end">
+            {session ? (
+              <Link
+                href="/games/new"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:bg-emerald-700"
+              >
+                <span aria-hidden className="text-lg leading-none">
+                  ＋
+                </span>
+                建立牌局
+              </Link>
+            ) : (
+              <Link
+                href="/login?next=/games/new"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:bg-emerald-700"
+              >
+                <span aria-hidden className="text-lg leading-none">
+                  ＋
+                </span>
+                登入後建局
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

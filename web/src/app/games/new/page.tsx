@@ -140,7 +140,7 @@ export default async function NewGamePage({
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-zinc-50 font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:py-10">
+      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-[max(7.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:py-10">
         <Link
           href="/games"
           className="inline-flex min-h-10 items-center text-base text-zinc-500 transition active:text-zinc-800 dark:active:text-zinc-200"
@@ -180,82 +180,91 @@ export default async function NewGamePage({
         <form action={createGameAction} className="mt-8 space-y-6">
           <input type="hidden" name="next" value={nextPath} />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="space-y-2 sm:col-span-2">
-              <span className="text-sm font-medium">標題</span>
-              <input
-                name="title"
-                required
-                placeholder="例：新莊友善小底 100/20"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-sm font-medium">基本資訊</p>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">標題</span>
+                <input
+                  name="title"
+                  required
+                  placeholder="例：新莊友善小底 100/20"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                />
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  用一句話讓人秒懂：地點 + 規則（底/台）+ 其他重點（禁菸/手搓等）。
+                </p>
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium">縣市</span>
-              <input
-                name="county"
-                required
-                placeholder="例：新北市"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">縣市</span>
+                <input
+                  name="county"
+                  required
+                  placeholder="例：新北市"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium">行政區（選填）</span>
-              <input
-                name="district"
-                placeholder="例：新莊區"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">行政區（選填）</span>
+                <input
+                  name="district"
+                  placeholder="例：新莊區"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium">場地類型</span>
-              <select
-                name="venue_type"
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  請選擇
-                </option>
-                <option value="home">家裡</option>
-                <option value="club">麻將館</option>
-                <option value="rented">租借場地</option>
-                <option value="other">其他</option>
-              </select>
-            </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">場地類型</span>
+                <select
+                  name="venue_type"
+                  required
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    請選擇
+                  </option>
+                  <option value="home">家裡</option>
+                  <option value="club">麻將館</option>
+                  <option value="rented">租借場地</option>
+                  <option value="other">其他</option>
+                </select>
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium">開始時間</span>
-              <input
-                name="starts_at"
-                required
-                type="datetime-local"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">開始時間</span>
+                <input
+                  name="starts_at"
+                  required
+                  type="datetime-local"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium">座位數</span>
-              <input
-                name="seats_total"
-                type="number"
-                min={2}
-                max={8}
-                defaultValue={4}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+              <label className="space-y-2">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">座位數</span>
+                <input
+                  name="seats_total"
+                  type="number"
+                  min={2}
+                  max={8}
+                  defaultValue={4}
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-emerald-400 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                />
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  常見 4 人；也可填 2～8（依你的局規則）。
+                </p>
+              </label>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm font-medium">規則（可篩選的常用欄位）</p>
+            <p className="text-sm font-medium">規則偏好（讓人更好配對）</p>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">底（Base）</span>
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">底（選填）</span>
                 <input
                   name="base"
                   type="number"
@@ -266,7 +275,7 @@ export default async function NewGamePage({
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">台（Unit）</span>
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">台（選填）</span>
                 <input
                   name="unit"
                   type="number"
@@ -316,6 +325,9 @@ export default async function NewGamePage({
                   <option value="riichi">日麻</option>
                   <option value="hong_kong">港麻</option>
                 </select>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  不確定就選「不限」，讓更多人看得到你的局。
+                </p>
               </label>
               <label className="space-y-2 sm:col-span-2">
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">將</span>
@@ -331,6 +343,9 @@ export default async function NewGamePage({
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  手機點一下會出現系統滾輪；不確定就選「不限」。
+                </p>
               </label>
             </div>
           </div>
@@ -370,24 +385,34 @@ export default async function NewGamePage({
               </label>
             </div>
           </div>
+        </form>
+      </main>
 
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/85 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/75">
+        <div className="mx-auto w-full max-w-xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
+              formAction={createGameAction}
               type="submit"
               disabled={!session}
-              className="min-h-12 rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-0 sm:text-sm"
+              className="min-h-12 flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-base font-medium text-white shadow-sm transition active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-0 sm:text-sm"
             >
               送出建立
             </button>
             <Link
               href="/games"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-base font-medium text-zinc-800 transition active:bg-zinc-100 sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:text-zinc-100 dark:active:bg-zinc-800"
             >
               取消
             </Link>
           </div>
-        </form>
-      </main>
+          {!session ? (
+            <p className="mt-2 text-xs text-amber-900 dark:text-amber-100">
+              你尚未登入，請先登入後才能送出建立。
+            </p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
